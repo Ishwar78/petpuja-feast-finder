@@ -4,18 +4,22 @@ import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { Button } from '@/components/ui/button';
 import { useCart } from '@/context/CartContext';
+import { useLoyalty } from '@/context/LoyaltyContext';
 import { useOrderNotifications } from '@/hooks/useOrderNotifications';
-import { CreditCard, Banknote, Smartphone, MapPin, User, Phone } from 'lucide-react';
+import { CreditCard, Banknote, Smartphone, MapPin, User, Phone, Star, Gift } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from '@/hooks/use-toast';
+import { Switch } from '@/components/ui/switch';
 
 type PaymentMethod = 'cod' | 'upi' | 'card';
 
 const Checkout = () => {
   const navigate = useNavigate();
   const { state, clearCart } = useCart();
+  const { totalPoints, earnPoints, redeemPoints, getPointsValue, getPointsForAmount } = useLoyalty();
   const { notifyOrderPlaced, notifyOrderPreparing, notifyOrderOutForDelivery } = useOrderNotifications();
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('cod');
+  const [usePoints, setUsePoints] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     phone: '',
@@ -27,7 +31,15 @@ const Checkout = () => {
 
   const deliveryCharge = state.subtotal > 500 ? 0 : 40;
   const gst = Math.round(state.subtotal * 0.05);
-  const grandTotal = state.subtotal + deliveryCharge + gst;
+  const subtotalWithCharges = state.subtotal + deliveryCharge + gst;
+  
+  // Calculate points discount
+  const maxRedeemablePoints = Math.min(totalPoints, Math.floor(subtotalWithCharges * 4)); // Max 100% discount
+  const pointsDiscount = usePoints ? getPointsValue(maxRedeemablePoints) : 0;
+  const grandTotal = Math.max(0, subtotalWithCharges - pointsDiscount);
+  
+  // Points to earn on this order
+  const pointsToEarn = getPointsForAmount(grandTotal);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -44,6 +56,16 @@ const Checkout = () => {
     // Generate order ID
     const orderId = 'PP' + Date.now().toString().slice(-8);
     
+    // Redeem points if using them
+    if (usePoints && maxRedeemablePoints > 0) {
+      redeemPoints(maxRedeemablePoints, `Redeemed on order #${orderId}`);
+    }
+    
+    // Earn points on the order
+    if (pointsToEarn > 0) {
+      earnPoints(grandTotal, `Order #${orderId}`, orderId);
+    }
+    
     // Store order details for invoice
     localStorage.setItem('petpuja-last-order', JSON.stringify({
       orderId,
@@ -51,6 +73,9 @@ const Checkout = () => {
       subtotal: state.subtotal,
       gst,
       deliveryCharge,
+      pointsRedeemed: usePoints ? maxRedeemablePoints : 0,
+      pointsDiscount,
+      pointsEarned: pointsToEarn,
       grandTotal,
       paymentMethod,
       customer: formData,
@@ -281,11 +306,40 @@ const Checkout = () => {
                         )}
                       </span>
                     </div>
+
+                    {/* Loyalty Points Section */}
+                    {totalPoints > 0 && (
+                      <div className="border-t border-border pt-3 space-y-3">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <Gift className="w-4 h-4 text-primary" />
+                            <span className="text-sm font-medium text-foreground">Use Points</span>
+                            <span className="text-xs text-muted-foreground">({totalPoints} pts)</span>
+                          </div>
+                          <Switch
+                            checked={usePoints}
+                            onCheckedChange={setUsePoints}
+                          />
+                        </div>
+                        {usePoints && (
+                          <div className="flex justify-between text-sm">
+                            <span className="text-primary">Points Discount ({maxRedeemablePoints} pts)</span>
+                            <span className="font-medium text-primary">-₹{pointsDiscount.toFixed(0)}</span>
+                          </div>
+                        )}
+                      </div>
+                    )}
                     
                     <div className="border-t border-border pt-3">
                       <div className="flex justify-between">
                         <span className="text-lg font-bold text-foreground">Total</span>
-                        <span className="text-lg font-bold text-primary">₹{grandTotal}</span>
+                        <span className="text-lg font-bold text-primary">₹{grandTotal.toFixed(0)}</span>
+                      </div>
+                      
+                      {/* Points to earn */}
+                      <div className="flex items-center justify-center gap-1 mt-2 text-xs text-primary bg-primary/10 rounded-lg py-2">
+                        <Star className="w-3 h-3 fill-primary" />
+                        <span>You'll earn <strong>{pointsToEarn}</strong> points on this order</span>
                       </div>
                     </div>
                   </div>
