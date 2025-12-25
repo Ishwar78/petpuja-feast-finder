@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Menu, X, ShoppingCart, User } from 'lucide-react';
+import { Menu, X, ShoppingCart, User, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useCart } from '@/context/CartContext';
 import { cn } from '@/lib/utils';
@@ -60,6 +60,12 @@ export const Header = () => {
 
           {/* Actions */}
           <div className="flex items-center gap-2 md:gap-4">
+            <Link to="/order-history" className="hidden md:block">
+              <Button variant="ghost" size="icon" title="Order History">
+                <Clock className="h-5 w-5" />
+              </Button>
+            </Link>
+
             <Link to="/cart" className="relative">
               <Button variant="ghost" size="icon" className="relative">
                 <ShoppingCart className="h-5 w-5" />
@@ -114,6 +120,13 @@ export const Header = () => {
                   {link.name}
                 </Link>
               ))}
+              <Link
+                to="/order-history"
+                onClick={() => setIsMenuOpen(false)}
+                className="px-4 py-3 rounded-lg text-sm font-medium text-foreground/80 hover:bg-secondary"
+              >
+                Order History
+              </Link>
               <Link
                 to="/admin"
                 onClick={() => setIsMenuOpen(false)}
