@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { useCart } from '@/context/CartContext';
 import { useFavorites } from '@/context/FavoritesContext';
 import { NotificationCenter } from '@/components/NotificationCenter';
+import LoyaltyBadge from '@/components/LoyaltyBadge';
 import { cn } from '@/lib/utils';
 
 const navLinks = [
@@ -63,6 +64,10 @@ export const Header = () => {
 
           {/* Actions */}
           <div className="flex items-center gap-2 md:gap-4">
+            <div className="hidden md:block">
+              <LoyaltyBadge />
+            </div>
+
             <Link to="/favorites" className="hidden md:block relative">
               <Button variant="ghost" size="icon" title="Favorites">
                 <Heart className="h-5 w-5" />
