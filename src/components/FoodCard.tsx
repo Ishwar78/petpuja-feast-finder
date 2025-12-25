@@ -1,10 +1,12 @@
 import { Link } from 'react-router-dom';
-import { Star, Plus, Minus, Flame } from 'lucide-react';
+import { Star, Plus, Minus, Flame, Heart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { MenuItem } from '@/data/menuData';
 import { useCart } from '@/context/CartContext';
 import { useReviews } from '@/components/ReviewSystem';
+import { useFavorites } from '@/context/FavoritesContext';
 import { cn } from '@/lib/utils';
+import { toast } from 'sonner';
 
 interface FoodCardProps {
   item: MenuItem;
@@ -14,12 +16,21 @@ interface FoodCardProps {
 export const FoodCard = ({ item, compact = false }: FoodCardProps) => {
   const { addItem, updateQuantity, getItemQuantity } = useCart();
   const { getItemRating } = useReviews();
+  const { isFavorite, toggleFavorite } = useFavorites();
   const quantity = getItemQuantity(item.id);
+  const favorite = isFavorite(item.id);
   
   // Use customer reviews if available, otherwise use default
   const itemRating = getItemRating(item.id);
   const displayRating = itemRating?.average || item.rating;
   const displayReviewCount = itemRating?.count || item.reviews;
+
+  const handleToggleFavorite = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    toggleFavorite(item.id);
+    toast.success(favorite ? 'Removed from favorites' : 'Added to favorites');
+  };
 
   return (
     <div className={cn(
@@ -51,9 +62,21 @@ export const FoodCard = ({ item, compact = false }: FoodCardProps) => {
             item.isVeg ? "bg-green-fresh" : "bg-accent"
           )} />
         </div>
+        {/* Favorite Button */}
+        <button
+          onClick={handleToggleFavorite}
+          className={cn(
+            "absolute top-2 right-2 w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300",
+            favorite 
+              ? "bg-accent text-accent-foreground" 
+              : "bg-card/80 text-muted-foreground hover:bg-card hover:text-accent"
+          )}
+        >
+          <Heart className={cn("w-4 h-4", favorite && "fill-current")} />
+        </button>
         {/* Popular Badge */}
         {item.popular && !compact && (
-          <div className="absolute top-2 right-2 bg-primary text-primary-foreground text-xs font-semibold px-2 py-1 rounded-full">
+          <div className="absolute top-2 left-10 bg-primary text-primary-foreground text-xs font-semibold px-2 py-1 rounded-full">
             Popular
           </div>
         )}

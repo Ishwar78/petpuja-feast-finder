@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Menu, X, ShoppingCart, User, Clock } from 'lucide-react';
+import { Menu, X, ShoppingCart, User, Clock, Heart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useCart } from '@/context/CartContext';
+import { useFavorites } from '@/context/FavoritesContext';
 import { cn } from '@/lib/utils';
 
 const navLinks = [
@@ -17,6 +18,7 @@ export const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const location = useLocation();
   const { state } = useCart();
+  const { favorites } = useFavorites();
 
   return (
     <header className="sticky top-0 z-50 w-full bg-card/95 backdrop-blur-md border-b border-border shadow-warm-sm">
@@ -60,6 +62,17 @@ export const Header = () => {
 
           {/* Actions */}
           <div className="flex items-center gap-2 md:gap-4">
+            <Link to="/favorites" className="hidden md:block relative">
+              <Button variant="ghost" size="icon" title="Favorites">
+                <Heart className="h-5 w-5" />
+                {favorites.length > 0 && (
+                  <span className="absolute -top-1 -right-1 w-5 h-5 bg-accent text-accent-foreground text-xs font-bold rounded-full flex items-center justify-center">
+                    {favorites.length}
+                  </span>
+                )}
+              </Button>
+            </Link>
+
             <Link to="/order-history" className="hidden md:block">
               <Button variant="ghost" size="icon" title="Order History">
                 <Clock className="h-5 w-5" />
@@ -120,6 +133,14 @@ export const Header = () => {
                   {link.name}
                 </Link>
               ))}
+              <Link
+                to="/favorites"
+                onClick={() => setIsMenuOpen(false)}
+                className="px-4 py-3 rounded-lg text-sm font-medium text-foreground/80 hover:bg-secondary flex items-center gap-2"
+              >
+                <Heart className="w-4 h-4" />
+                Favorites {favorites.length > 0 && `(${favorites.length})`}
+              </Link>
               <Link
                 to="/order-history"
                 onClick={() => setIsMenuOpen(false)}

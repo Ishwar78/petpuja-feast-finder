@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { CartProvider } from "@/context/CartContext";
+import { FavoritesProvider } from "@/context/FavoritesContext";
 import Index from "./pages/Index";
 import Menu from "./pages/Menu";
 import FoodDetails from "./pages/FoodDetails";
@@ -12,6 +13,7 @@ import Checkout from "./pages/Checkout";
 import OrderConfirmation from "./pages/OrderConfirmation";
 import OrderTracking from "./pages/OrderTracking";
 import OrderHistory from "./pages/OrderHistory";
+import Favorites from "./pages/Favorites";
 import Contact from "./pages/Contact";
 import About from "./pages/About";
 import Offers from "./pages/Offers";
@@ -28,6 +30,7 @@ const queryClient = new QueryClient();
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <CartProvider>
+      <FavoritesProvider>
       <TooltipProvider>
         <Toaster />
         <Sonner />
@@ -41,6 +44,7 @@ const App = () => (
             <Route path="/order-confirmation" element={<OrderConfirmation />} />
             <Route path="/track-order" element={<OrderTracking />} />
             <Route path="/order-history" element={<OrderHistory />} />
+            <Route path="/favorites" element={<Favorites />} />
             <Route path="/contact" element={<Contact />} />
             <Route path="/about" element={<About />} />
             <Route path="/offers" element={<Offers />} />
@@ -54,6 +58,7 @@ const App = () => (
           </Routes>
         </BrowserRouter>
       </TooltipProvider>
+      </FavoritesProvider>
     </CartProvider>
   </QueryClientProvider>
 );
