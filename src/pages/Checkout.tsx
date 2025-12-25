@@ -4,6 +4,7 @@ import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { Button } from '@/components/ui/button';
 import { useCart } from '@/context/CartContext';
+import { useOrderNotifications } from '@/hooks/useOrderNotifications';
 import { CreditCard, Banknote, Smartphone, MapPin, User, Phone } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from '@/hooks/use-toast';
@@ -13,6 +14,7 @@ type PaymentMethod = 'cod' | 'upi' | 'card';
 const Checkout = () => {
   const navigate = useNavigate();
   const { state, clearCart } = useCart();
+  const { notifyOrderPlaced, notifyOrderPreparing, notifyOrderOutForDelivery } = useOrderNotifications();
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('cod');
   const [formData, setFormData] = useState({
     name: '',
@@ -54,6 +56,13 @@ const Checkout = () => {
       customer: formData,
       orderDate: new Date().toISOString()
     }));
+
+    // Send order notifications
+    notifyOrderPlaced(orderId);
+    
+    // Simulate order progress notifications
+    setTimeout(() => notifyOrderPreparing(orderId), 10000); // 10 seconds later
+    setTimeout(() => notifyOrderOutForDelivery(orderId), 30000); // 30 seconds later
 
     clearCart();
     navigate('/order-confirmation');

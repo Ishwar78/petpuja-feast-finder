@@ -4,6 +4,7 @@ import { Menu, X, ShoppingCart, User, Clock, Heart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useCart } from '@/context/CartContext';
 import { useFavorites } from '@/context/FavoritesContext';
+import { NotificationCenter } from '@/components/NotificationCenter';
 import { cn } from '@/lib/utils';
 
 const navLinks = [
@@ -78,6 +79,10 @@ export const Header = () => {
                 <Clock className="h-5 w-5" />
               </Button>
             </Link>
+
+            <div className="hidden md:block">
+              <NotificationCenter />
+            </div>
 
             <Link to="/cart" className="relative">
               <Button variant="ghost" size="icon" className="relative">
