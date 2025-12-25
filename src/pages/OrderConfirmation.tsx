@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { Button } from '@/components/ui/button';
-import { CheckCircle, Download, Home, Printer } from 'lucide-react';
+import { CheckCircle, Home, Printer, MapPin } from 'lucide-react';
 
 interface OrderData {
   orderId: string;
@@ -184,8 +184,14 @@ const OrderConfirmation = () => {
                 <Printer className="w-4 h-4 mr-2" />
                 Print Invoice
               </Button>
-              <Link to="/">
+              <Link to={`/track-order?id=${order.orderId}`}>
                 <Button variant="warm">
+                  <MapPin className="w-4 h-4 mr-2" />
+                  Track Order
+                </Button>
+              </Link>
+              <Link to="/">
+                <Button variant="ghost">
                   <Home className="w-4 h-4 mr-2" />
                   Back to Home
                 </Button>
