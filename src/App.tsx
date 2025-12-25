@@ -11,6 +11,7 @@ import Cart from "./pages/Cart";
 import Checkout from "./pages/Checkout";
 import OrderConfirmation from "./pages/OrderConfirmation";
 import OrderTracking from "./pages/OrderTracking";
+import OrderHistory from "./pages/OrderHistory";
 import Contact from "./pages/Contact";
 import About from "./pages/About";
 import Offers from "./pages/Offers";
@@ -39,6 +40,7 @@ const App = () => (
             <Route path="/checkout" element={<Checkout />} />
             <Route path="/order-confirmation" element={<OrderConfirmation />} />
             <Route path="/track-order" element={<OrderTracking />} />
+            <Route path="/order-history" element={<OrderHistory />} />
             <Route path="/contact" element={<Contact />} />
             <Route path="/about" element={<About />} />
             <Route path="/offers" element={<Offers />} />
