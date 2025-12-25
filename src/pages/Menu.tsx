@@ -5,6 +5,7 @@ import { FoodCard } from '@/components/FoodCard';
 import { menuItems, categories } from '@/data/menuData';
 import { cn } from '@/lib/utils';
 import { Search } from 'lucide-react';
+import { VoiceSearch } from '@/components/VoiceSearch';
 
 const Menu = () => {
   const [activeCategory, setActiveCategory] = useState('all');
@@ -16,6 +17,10 @@ const Menu = () => {
                          item.description.toLowerCase().includes(searchQuery.toLowerCase());
     return matchesCategory && matchesSearch;
   });
+
+  const handleVoiceResult = (transcript: string) => {
+    setSearchQuery(transcript);
+  };
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -31,16 +36,19 @@ const Menu = () => {
               Explore our wide variety of delicious dishes prepared with love
             </p>
 
-            {/* Search Bar */}
-            <div className="mt-8 max-w-md mx-auto relative">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-              <input
-                type="text"
-                placeholder="Search for dishes..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full h-12 pl-12 pr-4 rounded-xl bg-card border border-border focus:outline-none focus:ring-2 focus:ring-primary text-foreground"
-              />
+            {/* Search Bar with Voice Input */}
+            <div className="mt-8 max-w-md mx-auto relative flex items-center gap-2">
+              <div className="relative flex-1">
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                <input
+                  type="text"
+                  placeholder="Search for dishes..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full h-12 pl-12 pr-4 rounded-xl bg-card border border-border focus:outline-none focus:ring-2 focus:ring-primary text-foreground"
+                />
+              </div>
+              <VoiceSearch onResult={handleVoiceResult} />
             </div>
           </div>
         </section>
