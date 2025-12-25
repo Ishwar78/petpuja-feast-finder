@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
@@ -5,12 +6,15 @@ import { FoodCard } from '@/components/FoodCard';
 import { Button } from '@/components/ui/button';
 import { menuItems } from '@/data/menuData';
 import { useCart } from '@/context/CartContext';
-import { Star, Plus, Minus, ArrowLeft, Flame, Clock, Leaf } from 'lucide-react';
+import { ReviewModal, ReviewsList, useReviews } from '@/components/ReviewSystem';
+import { Star, Plus, Minus, ArrowLeft, Flame, Clock, Leaf, MessageSquarePlus } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const FoodDetails = () => {
   const { id } = useParams();
   const { addItem, updateQuantity, getItemQuantity } = useCart();
+  const { addReview, getItemReviews, getItemRating } = useReviews();
+  const [showReviewModal, setShowReviewModal] = useState(false);
   
   const item = menuItems.find(i => i.id === id);
   const quantity = item ? getItemQuantity(item.id) : 0;
@@ -18,6 +22,13 @@ const FoodDetails = () => {
   const relatedItems = menuItems
     .filter(i => i.category === item?.category && i.id !== item?.id)
     .slice(0, 4);
+
+  const itemReviews = item ? getItemReviews(item.id) : [];
+  const itemRating = item ? getItemRating(item.id) : null;
+
+  // Use customer reviews if available, otherwise use default
+  const displayRating = itemRating?.average || item?.rating || 0;
+  const displayReviewCount = itemRating?.count || item?.reviews || 0;
 
   if (!item) {
     return (
@@ -81,11 +92,16 @@ const FoodDetails = () => {
 
               {/* Rating & Info */}
               <div className="flex flex-wrap items-center gap-4">
-                <div className="flex items-center gap-1 bg-gold/10 px-3 py-1.5 rounded-full">
+                <button 
+                  onClick={() => setShowReviewModal(true)}
+                  className="flex items-center gap-1 bg-gold/10 px-3 py-1.5 rounded-full hover:bg-gold/20 transition-colors"
+                >
                   <Star className="w-5 h-5 fill-gold text-gold" />
-                  <span className="font-semibold text-foreground">{item.rating}</span>
-                  <span className="text-muted-foreground text-sm">({item.reviews} reviews)</span>
-                </div>
+                  <span className="font-semibold text-foreground">{displayRating}</span>
+                  <span className="text-muted-foreground text-sm">
+                    ({displayReviewCount} {displayReviewCount === 1 ? 'review' : 'reviews'})
+                  </span>
+                </button>
                 
                 {item.spicy && (
                   <div className="flex items-center gap-1 bg-accent/10 px-3 py-1.5 rounded-full">
@@ -162,6 +178,28 @@ const FoodDetails = () => {
             </div>
           </div>
 
+          {/* Reviews Section */}
+          <section className="mt-16">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold text-foreground">
+                Customer Reviews
+                {itemReviews.length > 0 && (
+                  <span className="text-muted-foreground text-lg font-normal ml-2">
+                    ({itemReviews.length})
+                  </span>
+                )}
+              </h2>
+              <Button variant="outline" onClick={() => setShowReviewModal(true)}>
+                <MessageSquarePlus className="w-4 h-4 mr-2" />
+                Write a Review
+              </Button>
+            </div>
+
+            <div className="bg-card rounded-2xl p-6 shadow-warm-sm">
+              <ReviewsList reviews={itemReviews} maxItems={5} />
+            </div>
+          </section>
+
           {/* Related Items */}
           {relatedItems.length > 0 && (
             <section className="mt-16">
@@ -176,6 +214,15 @@ const FoodDetails = () => {
         </div>
       </main>
       <Footer />
+
+      {/* Review Modal */}
+      <ReviewModal
+        isOpen={showReviewModal}
+        onClose={() => setShowReviewModal(false)}
+        itemId={item.id}
+        itemName={item.name}
+        onSubmit={addReview}
+      />
     </div>
   );
 };
