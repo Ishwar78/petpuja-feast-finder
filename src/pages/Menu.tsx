@@ -4,18 +4,48 @@ import { Footer } from '@/components/Footer';
 import { FoodCard } from '@/components/FoodCard';
 import { menuItems, categories } from '@/data/menuData';
 import { cn } from '@/lib/utils';
-import { Search } from 'lucide-react';
+import { Search, Leaf, Wheat } from 'lucide-react';
 import { VoiceSearch } from '@/components/VoiceSearch';
+
+type DietaryFilter = 'vegetarian' | 'vegan' | 'gluten-free';
+
+const dietaryFilters: { id: DietaryFilter; label: string; icon: React.ReactNode }[] = [
+  { id: 'vegetarian', label: 'Vegetarian', icon: <Leaf className="w-4 h-4" /> },
+  { id: 'vegan', label: 'Vegan', icon: <Leaf className="w-4 h-4" /> },
+  { id: 'gluten-free', label: 'Gluten-Free', icon: <Wheat className="w-4 h-4" /> },
+];
 
 const Menu = () => {
   const [activeCategory, setActiveCategory] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const [activeDietaryFilters, setActiveDietaryFilters] = useState<DietaryFilter[]>([]);
+
+  const toggleDietaryFilter = (filter: DietaryFilter) => {
+    setActiveDietaryFilters(prev =>
+      prev.includes(filter)
+        ? prev.filter(f => f !== filter)
+        : [...prev, filter]
+    );
+  };
 
   const filteredItems = menuItems.filter(item => {
     const matchesCategory = activeCategory === 'all' || item.category === activeCategory;
     const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          item.description.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesCategory && matchesSearch;
+    
+    // Apply dietary filters
+    let matchesDietary = true;
+    if (activeDietaryFilters.includes('vegetarian') || activeDietaryFilters.includes('vegan')) {
+      matchesDietary = item.isVeg;
+    }
+    // Gluten-free: exclude items that typically contain gluten (pizza, burger, dosa, roti-based items)
+    if (activeDietaryFilters.includes('gluten-free')) {
+      const glutenItems = ['pizza', 'burger', 'dosa', 'roti', 'naan', 'paratha'];
+      const hasGluten = glutenItems.some(g => item.name.toLowerCase().includes(g) || item.description.toLowerCase().includes(g));
+      matchesDietary = matchesDietary && !hasGluten;
+    }
+    
+    return matchesCategory && matchesSearch && matchesDietary;
   });
 
   const handleVoiceResult = (transcript: string) => {
@@ -49,6 +79,25 @@ const Menu = () => {
                 />
               </div>
               <VoiceSearch onResult={handleVoiceResult} />
+            </div>
+
+            {/* Dietary Filters */}
+            <div className="mt-6 flex flex-wrap justify-center gap-2">
+              {dietaryFilters.map((filter) => (
+                <button
+                  key={filter.id}
+                  onClick={() => toggleDietaryFilter(filter.id)}
+                  className={cn(
+                    "flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all duration-300",
+                    activeDietaryFilters.includes(filter.id)
+                      ? "bg-green-fresh text-primary-foreground shadow-warm-sm"
+                      : "bg-card/50 text-primary-foreground/80 border border-border/50 hover:bg-card/80"
+                  )}
+                >
+                  {filter.icon}
+                  <span>{filter.label}</span>
+                </button>
+              ))}
             </div>
           </div>
         </section>
