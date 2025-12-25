@@ -20,25 +20,45 @@ interface BonusMultiplier {
   active: boolean;
 }
 
+interface ReferralData {
+  myCode: string;
+  referredBy: string | null;
+  referralCount: number;
+  usedCodes: string[];
+}
+
 interface LoyaltyContextType {
   totalPoints: number;
   lifetimePoints: number;
   transactions: PointsTransaction[];
   activeBonuses: BonusMultiplier[];
+  referralData: ReferralData;
   earnPoints: (amount: number, description: string, orderId?: string, categories?: string[]) => void;
   redeemPoints: (amount: number, description: string) => boolean;
   getPointsValue: (points: number) => number;
   getPointsForAmount: (amount: number, categories?: string[]) => number;
   getActiveMultiplier: (categories?: string[]) => number;
   getBonusBreakdown: (categories?: string[]) => { base: number; bonus: number; multiplier: number };
+  applyReferralCode: (code: string) => { success: boolean; message: string };
+  addBonusPoints: (points: number, description: string) => void;
 }
 
 const LoyaltyContext = createContext<LoyaltyContextType | undefined>(undefined);
 
 const POINTS_PER_RUPEE = 1;
 const RUPEES_PER_POINT = 0.25;
+const REFERRAL_BONUS_REFERRER = 200; // Points for the person who refers
+const REFERRAL_BONUS_REFEREE = 150; // Points for the new user
 
-// Define bonus multipliers
+// Generate a unique referral code
+const generateReferralCode = (): string => {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let code = 'PP';
+  for (let i = 0; i < 6; i++) {
+    code += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return code;
+};
 const getBonusMultipliers = (): BonusMultiplier[] => {
   const now = new Date();
   const day = now.getDay();
@@ -110,6 +130,12 @@ export const LoyaltyProvider = ({ children }: { children: ReactNode }) => {
   const [lifetimePoints, setLifetimePoints] = useState(0);
   const [transactions, setTransactions] = useState<PointsTransaction[]>([]);
   const [activeBonuses, setActiveBonuses] = useState<BonusMultiplier[]>([]);
+  const [referralData, setReferralData] = useState<ReferralData>({
+    myCode: '',
+    referredBy: null,
+    referralCount: 0,
+    usedCodes: [],
+  });
 
   // Update bonuses every minute
   useEffect(() => {
@@ -131,6 +157,12 @@ export const LoyaltyProvider = ({ children }: { children: ReactNode }) => {
       setTotalPoints(data.totalPoints || 0);
       setLifetimePoints(data.lifetimePoints || 0);
       setTransactions(data.transactions || []);
+      setReferralData(data.referralData || {
+        myCode: generateReferralCode(),
+        referredBy: null,
+        referralCount: 0,
+        usedCodes: [],
+      });
     } else {
       const welcomeBonus = 100;
       const welcomeTransaction: PointsTransaction = {
@@ -143,18 +175,76 @@ export const LoyaltyProvider = ({ children }: { children: ReactNode }) => {
       setTotalPoints(welcomeBonus);
       setLifetimePoints(welcomeBonus);
       setTransactions([welcomeTransaction]);
+      setReferralData({
+        myCode: generateReferralCode(),
+        referredBy: null,
+        referralCount: 0,
+        usedCodes: [],
+      });
     }
   }, []);
 
   useEffect(() => {
-    if (totalPoints > 0 || transactions.length > 0) {
+    if (totalPoints > 0 || transactions.length > 0 || referralData.myCode) {
       localStorage.setItem('loyaltyData', JSON.stringify({
         totalPoints,
         lifetimePoints,
         transactions,
+        referralData,
       }));
     }
-  }, [totalPoints, lifetimePoints, transactions]);
+  }, [totalPoints, lifetimePoints, transactions, referralData]);
+
+  const addBonusPoints = (points: number, description: string) => {
+    if (points <= 0) return;
+
+    const transaction: PointsTransaction = {
+      id: crypto.randomUUID(),
+      points,
+      type: 'earned',
+      description,
+      createdAt: new Date().toISOString(),
+    };
+
+    setTotalPoints(prev => prev + points);
+    setLifetimePoints(prev => prev + points);
+    setTransactions(prev => [transaction, ...prev].slice(0, 50));
+  };
+
+  const applyReferralCode = (code: string): { success: boolean; message: string } => {
+    const normalizedCode = code.toUpperCase().trim();
+    
+    // Can't use own code
+    if (normalizedCode === referralData.myCode) {
+      return { success: false, message: "You can't use your own referral code!" };
+    }
+    
+    // Already used this code
+    if (referralData.usedCodes.includes(normalizedCode)) {
+      return { success: false, message: "You've already used this referral code!" };
+    }
+    
+    // Already been referred
+    if (referralData.referredBy) {
+      return { success: false, message: "You've already used a referral code!" };
+    }
+    
+    // Validate code format (starts with PP and has 8 chars total)
+    if (!normalizedCode.startsWith('PP') || normalizedCode.length !== 8) {
+      return { success: false, message: "Invalid referral code format!" };
+    }
+    
+    // Apply referral bonus
+    addBonusPoints(REFERRAL_BONUS_REFEREE, `Referral bonus (code: ${normalizedCode})`);
+    
+    setReferralData(prev => ({
+      ...prev,
+      referredBy: normalizedCode,
+      usedCodes: [...prev.usedCodes, normalizedCode],
+    }));
+    
+    return { success: true, message: `You earned ${REFERRAL_BONUS_REFEREE} bonus points!` };
+  };
 
   const getActiveMultiplier = (categories?: string[]): number => {
     const bonuses = getBonusMultipliers().filter(b => b.active);
@@ -233,12 +323,15 @@ export const LoyaltyProvider = ({ children }: { children: ReactNode }) => {
       lifetimePoints,
       transactions,
       activeBonuses,
+      referralData,
       earnPoints,
       redeemPoints,
       getPointsValue,
       getPointsForAmount,
       getActiveMultiplier,
       getBonusBreakdown,
+      applyReferralCode,
+      addBonusPoints,
     }}>
       {children}
     </LoyaltyContext.Provider>

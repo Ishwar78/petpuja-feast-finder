@@ -1,4 +1,4 @@
-import { Star, Gift, History, Sparkles } from 'lucide-react';
+import { Star, Gift, History, Sparkles, Users } from 'lucide-react';
 import { useLoyalty } from '@/context/LoyaltyContext';
 import {
   Popover,
@@ -9,9 +9,10 @@ import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
+import { Link } from 'react-router-dom';
 
 const LoyaltyBadge = () => {
-  const { totalPoints, lifetimePoints, transactions, activeBonuses, getPointsValue } = useLoyalty();
+  const { totalPoints, lifetimePoints, transactions, activeBonuses, referralData, getPointsValue } = useLoyalty();
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-IN', {
@@ -83,8 +84,21 @@ const LoyaltyBadge = () => {
           <div className="text-xs text-muted-foreground bg-muted/50 p-2 rounded space-y-1">
             <p>• Earn 1 point per ₹1 spent</p>
             <p>• Redeem 4 points = ₹1 discount</p>
-            <p>• Bonus multipliers stack with categories!</p>
+            <p>• Refer friends for 200 bonus points!</p>
           </div>
+
+          {/* Referral quick link */}
+          <Link to="/offers" className="block">
+            <div className="flex items-center justify-between p-3 bg-primary/5 rounded-lg hover:bg-primary/10 transition-colors">
+              <div className="flex items-center gap-2">
+                <Users className="h-4 w-4 text-primary" />
+                <span className="text-sm font-medium">Your code: {referralData.myCode}</span>
+              </div>
+              <Badge variant="outline" className="text-xs">
+                {referralData.referralCount} referrals
+              </Badge>
+            </div>
+          </Link>
 
           <Separator />
 

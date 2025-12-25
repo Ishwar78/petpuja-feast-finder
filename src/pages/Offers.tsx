@@ -3,6 +3,8 @@ import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { Button } from '@/components/ui/button';
 import { Tag, Clock, Percent, Gift, ArrowRight } from 'lucide-react';
+import ReferralSection from '@/components/ReferralSection';
+import BonusPointsBanner from '@/components/BonusPointsBanner';
 
 const offers = [
   {
@@ -78,9 +80,28 @@ const Offers = () => {
           </div>
         </section>
 
+        {/* Referral Section */}
+        <section className="py-12 md:py-16 bg-secondary/30">
+          <div className="container mx-auto px-4">
+            <div className="max-w-2xl mx-auto">
+              <ReferralSection />
+            </div>
+          </div>
+        </section>
+
+        {/* Bonus Points Banner */}
+        <section className="py-8">
+          <div className="container mx-auto px-4">
+            <BonusPointsBanner />
+          </div>
+        </section>
+
         {/* Offers Grid */}
         <section className="py-12 md:py-20">
           <div className="container mx-auto px-4">
+            <h2 className="text-2xl md:text-3xl font-bold text-foreground text-center mb-8">
+              Discount <span className="text-primary">Coupons</span>
+            </h2>
             <div className="grid md:grid-cols-2 gap-6">
               {offers.map((offer, index) => (
                 <div
