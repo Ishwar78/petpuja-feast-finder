@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { X, Download, Smartphone } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Link } from 'react-router-dom';
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
@@ -37,14 +38,15 @@ export const InstallBanner = () => {
 
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
 
-    // For iOS devices that don't support beforeinstallprompt
-    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-    if (isIOS && !window.matchMedia('(display-mode: standalone)').matches) {
+    // Show banner for all users (including iOS and preview)
+    // The banner provides value by directing users to install instructions
+    const timer = setTimeout(() => {
       setShowBanner(true);
-    }
+    }, 2000);
 
     return () => {
       window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+      clearTimeout(timer);
     };
   }, []);
 
@@ -56,9 +58,6 @@ export const InstallBanner = () => {
         setShowBanner(false);
       }
       setDeferredPrompt(null);
-    } else {
-      // For iOS, redirect to install page with instructions
-      window.location.href = '/install';
     }
   };
 
@@ -85,16 +84,31 @@ export const InstallBanner = () => {
         </div>
         
         <div className="flex items-center gap-2">
-          <Button
-            onClick={handleInstall}
-            variant="secondary"
-            size="sm"
-            className="gap-2 whitespace-nowrap"
-          >
-            <Download className="h-4 w-4" />
-            <span className="hidden sm:inline">Install Now</span>
-            <span className="sm:hidden">Install</span>
-          </Button>
+          {deferredPrompt ? (
+            <Button
+              onClick={handleInstall}
+              variant="secondary"
+              size="sm"
+              className="gap-2 whitespace-nowrap"
+            >
+              <Download className="h-4 w-4" />
+              <span className="hidden sm:inline">Install Now</span>
+              <span className="sm:hidden">Install</span>
+            </Button>
+          ) : (
+            <Button
+              asChild
+              variant="secondary"
+              size="sm"
+              className="gap-2 whitespace-nowrap"
+            >
+              <Link to="/install">
+                <Download className="h-4 w-4" />
+                <span className="hidden sm:inline">How to Install</span>
+                <span className="sm:hidden">Install</span>
+              </Link>
+            </Button>
+          )}
           <Button
             onClick={handleDismiss}
             variant="ghost"
