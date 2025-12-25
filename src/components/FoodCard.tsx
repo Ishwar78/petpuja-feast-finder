@@ -3,6 +3,7 @@ import { Star, Plus, Minus, Flame } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { MenuItem } from '@/data/menuData';
 import { useCart } from '@/context/CartContext';
+import { useReviews } from '@/components/ReviewSystem';
 import { cn } from '@/lib/utils';
 
 interface FoodCardProps {
@@ -12,7 +13,13 @@ interface FoodCardProps {
 
 export const FoodCard = ({ item, compact = false }: FoodCardProps) => {
   const { addItem, updateQuantity, getItemQuantity } = useCart();
+  const { getItemRating } = useReviews();
   const quantity = getItemQuantity(item.id);
+  
+  // Use customer reviews if available, otherwise use default
+  const itemRating = getItemRating(item.id);
+  const displayRating = itemRating?.average || item.rating;
+  const displayReviewCount = itemRating?.count || item.reviews;
 
   return (
     <div className={cn(
@@ -82,9 +89,9 @@ export const FoodCard = ({ item, compact = false }: FoodCardProps) => {
         {/* Rating */}
         <div className="flex items-center gap-1 mt-2">
           <Star className="w-4 h-4 fill-gold text-gold" />
-          <span className="text-sm font-medium text-foreground">{item.rating}</span>
+          <span className="text-sm font-medium text-foreground">{displayRating}</span>
           {!compact && (
-            <span className="text-xs text-muted-foreground">({item.reviews})</span>
+            <span className="text-xs text-muted-foreground">({displayReviewCount})</span>
           )}
         </div>
 
