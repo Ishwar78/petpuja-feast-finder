@@ -19,6 +19,7 @@ import Favorites from "./pages/Favorites";
 import Contact from "./pages/Contact";
 import About from "./pages/About";
 import Offers from "./pages/Offers";
+import Install from "./pages/Install";
 import AdminLogin from "./pages/admin/AdminLogin";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminProducts from "./pages/admin/AdminProducts";
@@ -52,6 +53,7 @@ const App = () => (
             <Route path="/contact" element={<Contact />} />
             <Route path="/about" element={<About />} />
             <Route path="/offers" element={<Offers />} />
+            <Route path="/install" element={<Install />} />
             <Route path="/admin" element={<AdminLogin />} />
             <Route path="/admin/dashboard" element={<AdminDashboard />} />
             <Route path="/admin/products" element={<AdminProducts />} />
