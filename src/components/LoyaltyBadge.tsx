@@ -1,4 +1,4 @@
-import { Star, Gift, History } from 'lucide-react';
+import { Star, Gift, History, Sparkles } from 'lucide-react';
 import { useLoyalty } from '@/context/LoyaltyContext';
 import {
   Popover,
@@ -11,7 +11,7 @@ import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 
 const LoyaltyBadge = () => {
-  const { totalPoints, lifetimePoints, transactions, getPointsValue } = useLoyalty();
+  const { totalPoints, lifetimePoints, transactions, activeBonuses, getPointsValue } = useLoyalty();
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-IN', {
@@ -22,6 +22,8 @@ const LoyaltyBadge = () => {
     });
   };
 
+  const hasActiveTimeBonuses = activeBonuses.some(b => b.type === 'occasion' || b.type === 'time');
+
   return (
     <Popover>
       <PopoverTrigger asChild>
@@ -29,6 +31,9 @@ const LoyaltyBadge = () => {
           <Star className="h-4 w-4 fill-primary" />
           <span className="font-semibold">{totalPoints}</span>
           <span className="hidden sm:inline text-xs text-muted-foreground">pts</span>
+          {hasActiveTimeBonuses && (
+            <span className="absolute -top-1 -right-1 w-3 h-3 bg-accent rounded-full animate-pulse" />
+          )}
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-80" align="end">
@@ -57,9 +62,28 @@ const LoyaltyBadge = () => {
             </div>
           </div>
 
-          <div className="text-xs text-muted-foreground bg-muted/50 p-2 rounded">
+          {/* Active Bonuses */}
+          {activeBonuses.length > 0 && (
+            <>
+              <div className="flex items-center gap-2">
+                <Sparkles className="h-4 w-4 text-primary" />
+                <span className="text-sm font-medium">Active Bonuses</span>
+              </div>
+              <div className="flex flex-wrap gap-1.5">
+                {activeBonuses.map(bonus => (
+                  <Badge key={bonus.id} variant="secondary" className="gap-1 text-xs">
+                    <span>{bonus.icon}</span>
+                    <span>{bonus.multiplier}x</span>
+                  </Badge>
+                ))}
+              </div>
+            </>
+          )}
+
+          <div className="text-xs text-muted-foreground bg-muted/50 p-2 rounded space-y-1">
             <p>• Earn 1 point per ₹1 spent</p>
             <p>• Redeem 4 points = ₹1 discount</p>
+            <p>• Bonus multipliers stack with categories!</p>
           </div>
 
           <Separator />

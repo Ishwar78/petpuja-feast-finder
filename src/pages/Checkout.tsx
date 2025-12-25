@@ -6,17 +6,18 @@ import { Button } from '@/components/ui/button';
 import { useCart } from '@/context/CartContext';
 import { useLoyalty } from '@/context/LoyaltyContext';
 import { useOrderNotifications } from '@/hooks/useOrderNotifications';
-import { CreditCard, Banknote, Smartphone, MapPin, User, Phone, Star, Gift } from 'lucide-react';
+import { CreditCard, Banknote, Smartphone, MapPin, User, Phone, Star, Gift, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from '@/hooks/use-toast';
 import { Switch } from '@/components/ui/switch';
+import BonusPointsBanner from '@/components/BonusPointsBanner';
 
 type PaymentMethod = 'cod' | 'upi' | 'card';
 
 const Checkout = () => {
   const navigate = useNavigate();
   const { state, clearCart } = useCart();
-  const { totalPoints, earnPoints, redeemPoints, getPointsValue, getPointsForAmount } = useLoyalty();
+  const { totalPoints, activeBonuses, earnPoints, redeemPoints, getPointsValue, getPointsForAmount, getActiveMultiplier } = useLoyalty();
   const { notifyOrderPlaced, notifyOrderPreparing, notifyOrderOutForDelivery } = useOrderNotifications();
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('cod');
   const [usePoints, setUsePoints] = useState(false);
@@ -29,6 +30,9 @@ const Checkout = () => {
     pincode: ''
   });
 
+  // Get unique categories from cart items
+  const cartCategories = [...new Set(state.items.map(item => item.category).filter(Boolean))] as string[];
+
   const deliveryCharge = state.subtotal > 500 ? 0 : 40;
   const gst = Math.round(state.subtotal * 0.05);
   const subtotalWithCharges = state.subtotal + deliveryCharge + gst;
@@ -38,8 +42,9 @@ const Checkout = () => {
   const pointsDiscount = usePoints ? getPointsValue(maxRedeemablePoints) : 0;
   const grandTotal = Math.max(0, subtotalWithCharges - pointsDiscount);
   
-  // Points to earn on this order
-  const pointsToEarn = getPointsForAmount(grandTotal);
+  // Points to earn on this order (with category bonuses)
+  const pointsToEarn = getPointsForAmount(grandTotal, cartCategories);
+  const activeMultiplier = getActiveMultiplier(cartCategories);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -61,9 +66,9 @@ const Checkout = () => {
       redeemPoints(maxRedeemablePoints, `Redeemed on order #${orderId}`);
     }
     
-    // Earn points on the order
+    // Earn points on the order (with category bonuses)
     if (pointsToEarn > 0) {
-      earnPoints(grandTotal, `Order #${orderId}`, orderId);
+      earnPoints(grandTotal, `Order #${orderId}`, orderId, cartCategories);
     }
     
     // Store order details for invoice
@@ -109,7 +114,10 @@ const Checkout = () => {
       <Header />
       <main className="flex-1 bg-background">
         <div className="container mx-auto px-4 py-8">
-          <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-8">Checkout</h1>
+          <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-6">Checkout</h1>
+          
+          {/* Bonus Points Banner */}
+          <BonusPointsBanner />
 
           <form onSubmit={handleSubmit}>
             <div className="grid lg:grid-cols-3 gap-8">
@@ -337,9 +345,17 @@ const Checkout = () => {
                       </div>
                       
                       {/* Points to earn */}
-                      <div className="flex items-center justify-center gap-1 mt-2 text-xs text-primary bg-primary/10 rounded-lg py-2">
-                        <Star className="w-3 h-3 fill-primary" />
-                        <span>You'll earn <strong>{pointsToEarn}</strong> points on this order</span>
+                      <div className="flex flex-col items-center gap-1 mt-2 text-xs bg-primary/10 rounded-lg py-2 px-3">
+                        <div className="flex items-center gap-1 text-primary">
+                          <Star className="w-3 h-3 fill-primary" />
+                          <span>You'll earn <strong>{pointsToEarn}</strong> points on this order</span>
+                        </div>
+                        {activeMultiplier > 1 && (
+                          <div className="flex items-center gap-1 text-accent">
+                            <Sparkles className="w-3 h-3" />
+                            <span className="font-medium">{activeMultiplier}x bonus active!</span>
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
