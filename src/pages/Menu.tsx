@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { FoodCard } from '@/components/FoodCard';
-import { categories } from '@/data/menuData';
+import { categories, menuItems as fallbackMenuItems } from '@/data/menuData';
 import { productsAPI } from '@/lib/api';
 import { cn } from '@/lib/utils';
 import { Search, Leaf, Wheat } from 'lucide-react';
