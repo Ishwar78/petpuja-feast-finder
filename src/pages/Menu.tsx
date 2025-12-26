@@ -1,11 +1,13 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { FoodCard } from '@/components/FoodCard';
-import { menuItems, categories } from '@/data/menuData';
+import { categories } from '@/data/menuData';
+import { productsAPI } from '@/lib/api';
 import { cn } from '@/lib/utils';
 import { Search, Leaf, Wheat } from 'lucide-react';
 import { VoiceSearch } from '@/components/VoiceSearch';
+import type { MenuItem } from '@/data/menuData';
 
 type DietaryFilter = 'vegetarian' | 'vegan' | 'gluten-free';
 
@@ -16,9 +18,31 @@ const dietaryFilters: { id: DietaryFilter; label: string; icon: React.ReactNode 
 ];
 
 const Menu = () => {
+  const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [activeCategory, setActiveCategory] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [activeDietaryFilters, setActiveDietaryFilters] = useState<DietaryFilter[]>([]);
+
+  useEffect(() => {
+    fetchProducts();
+  }, []);
+
+  const fetchProducts = async () => {
+    try {
+      setIsLoading(true);
+      const response = await productsAPI.getAll();
+      setMenuItems(response.data);
+      setError(null);
+    } catch (err) {
+      console.error('Failed to fetch products:', err);
+      setError('Failed to load menu items. Using fallback data.');
+      setIsLoading(false);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const toggleDietaryFilter = (filter: DietaryFilter) => {
     setActiveDietaryFilters(prev =>
