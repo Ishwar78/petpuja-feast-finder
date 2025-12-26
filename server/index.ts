@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import { connectDB } from './db';
+import authRoutes from './api/auth';
 import productRoutes from './api/products';
 import orderRoutes from './api/orders';
 
@@ -18,6 +19,7 @@ connectDB().catch((error) => {
 });
 
 // Routes
+app.use('/api/auth', authRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/orders', orderRoutes);
 
