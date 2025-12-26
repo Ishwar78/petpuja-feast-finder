@@ -53,17 +53,27 @@ export const FeaturedSection = () => {
         </div>
 
         {/* Food Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {popularItems.map((item, index) => (
-            <div
-              key={item.id}
-              className="animate-slide-up"
-              style={{ animationDelay: `${index * 0.1}s` }}
-            >
-              <FoodCard item={item} />
-            </div>
-          ))}
-        </div>
+        {isLoading ? (
+          <div className="text-center py-8">
+            <p className="text-muted-foreground">Loading popular dishes...</p>
+          </div>
+        ) : popularItems.length > 0 ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {popularItems.map((item, index) => (
+              <div
+                key={item.id}
+                className="animate-slide-up"
+                style={{ animationDelay: `${index * 0.1}s` }}
+              >
+                <FoodCard item={item} />
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-8">
+            <p className="text-muted-foreground">No popular dishes available</p>
+          </div>
+        )}
 
         {/* CTA Banner */}
         <div className="mt-16 relative rounded-3xl overflow-hidden bg-gradient-to-r from-primary to-accent p-8 md:p-12">
