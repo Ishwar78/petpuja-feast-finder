@@ -22,6 +22,7 @@ export const FeaturedSection = () => {
       setPopularItems(popular);
     } catch (err) {
       console.error('Failed to fetch popular items:', err);
+      // Fallback to empty state - backend not available
       setPopularItems([]);
     } finally {
       setIsLoading(false);
