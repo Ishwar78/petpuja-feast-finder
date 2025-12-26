@@ -1,6 +1,18 @@
 import { connectDB } from './db';
 import { Product } from './models/Product';
+import { User } from './models/User';
 import mongoose from 'mongoose';
+
+const adminUser = {
+  name: 'PetPuja Admin',
+  email: 'petpuja12@gmail.com',
+  phone: '9999999999',
+  password: 'petpuja1234567',
+  role: 'admin' as const,
+  addresses: [],
+  favoriteItems: [],
+  loyaltyPoints: 0,
+};
 
 const menuItems = [
   {
