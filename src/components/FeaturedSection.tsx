@@ -4,6 +4,7 @@ import { ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { FoodCard } from '@/components/FoodCard';
 import { productsAPI } from '@/lib/api';
+import { menuItems as fallbackMenuItems } from '@/data/menuData';
 import type { MenuItem } from '@/data/menuData';
 
 export const FeaturedSection = () => {
