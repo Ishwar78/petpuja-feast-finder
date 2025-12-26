@@ -152,7 +152,21 @@ const Menu = () => {
         {/* Food Grid */}
         <section className="py-8 md:py-12">
           <div className="container mx-auto px-4">
-            {filteredItems.length > 0 ? (
+            {isLoading ? (
+              <div className="text-center py-16">
+                <p className="text-xl text-muted-foreground">Loading menu items...</p>
+              </div>
+            ) : error ? (
+              <div className="text-center py-16">
+                <p className="text-xl text-red-500 mb-2">{error}</p>
+                <button
+                  onClick={fetchProducts}
+                  className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90"
+                >
+                  Retry
+                </button>
+              </div>
+            ) : filteredItems.length > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 {filteredItems.map((item, index) => (
                   <div
