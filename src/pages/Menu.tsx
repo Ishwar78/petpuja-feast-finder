@@ -1,11 +1,13 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { FoodCard } from '@/components/FoodCard';
-import { menuItems, categories } from '@/data/menuData';
+import { categories, menuItems as fallbackMenuItems } from '@/data/menuData';
+import { productsAPI } from '@/lib/api';
 import { cn } from '@/lib/utils';
 import { Search, Leaf, Wheat } from 'lucide-react';
 import { VoiceSearch } from '@/components/VoiceSearch';
+import type { MenuItem } from '@/data/menuData';
 
 type DietaryFilter = 'vegetarian' | 'vegan' | 'gluten-free';
 
@@ -16,9 +18,32 @@ const dietaryFilters: { id: DietaryFilter; label: string; icon: React.ReactNode 
 ];
 
 const Menu = () => {
+  const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [activeCategory, setActiveCategory] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [activeDietaryFilters, setActiveDietaryFilters] = useState<DietaryFilter[]>([]);
+
+  useEffect(() => {
+    fetchProducts();
+  }, []);
+
+  const fetchProducts = async () => {
+    try {
+      setIsLoading(true);
+      const response = await productsAPI.getAll();
+      setMenuItems(response.data);
+      setError(null);
+    } catch (err) {
+      console.warn('Failed to fetch products from API, using fallback data:', err);
+      // Fallback to static data when backend is unavailable
+      setMenuItems(fallbackMenuItems);
+      setError(null);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const toggleDietaryFilter = (filter: DietaryFilter) => {
     setActiveDietaryFilters(prev =>
@@ -128,7 +153,21 @@ const Menu = () => {
         {/* Food Grid */}
         <section className="py-8 md:py-12">
           <div className="container mx-auto px-4">
-            {filteredItems.length > 0 ? (
+            {isLoading ? (
+              <div className="text-center py-16">
+                <p className="text-xl text-muted-foreground">Loading menu items...</p>
+              </div>
+            ) : error ? (
+              <div className="text-center py-16">
+                <p className="text-xl text-red-500 mb-2">{error}</p>
+                <button
+                  onClick={fetchProducts}
+                  className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90"
+                >
+                  Retry
+                </button>
+              </div>
+            ) : filteredItems.length > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 {filteredItems.map((item, index) => (
                   <div

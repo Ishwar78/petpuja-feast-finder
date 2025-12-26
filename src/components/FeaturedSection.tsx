@@ -1,11 +1,35 @@
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { FoodCard } from '@/components/FoodCard';
-import { menuItems } from '@/data/menuData';
+import { productsAPI } from '@/lib/api';
+import { menuItems as fallbackMenuItems } from '@/data/menuData';
+import type { MenuItem } from '@/data/menuData';
 
 export const FeaturedSection = () => {
-  const popularItems = menuItems.filter(item => item.popular).slice(0, 6);
+  const [popularItems, setPopularItems] = useState<MenuItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    fetchPopularItems();
+  }, []);
+
+  const fetchPopularItems = async () => {
+    try {
+      setIsLoading(true);
+      const response = await productsAPI.getAll();
+      const popular = response.data.filter((item: MenuItem) => item.popular).slice(0, 6);
+      setPopularItems(popular);
+    } catch (err) {
+      console.warn('Failed to fetch popular items from API, using fallback data:', err);
+      // Fallback to static data when backend is unavailable
+      const popular = fallbackMenuItems.filter(item => item.popular).slice(0, 6);
+      setPopularItems(popular);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <section className="py-16 md:py-24 bg-background">
@@ -32,17 +56,27 @@ export const FeaturedSection = () => {
         </div>
 
         {/* Food Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {popularItems.map((item, index) => (
-            <div
-              key={item.id}
-              className="animate-slide-up"
-              style={{ animationDelay: `${index * 0.1}s` }}
-            >
-              <FoodCard item={item} />
-            </div>
-          ))}
-        </div>
+        {isLoading ? (
+          <div className="text-center py-8">
+            <p className="text-muted-foreground">Loading popular dishes...</p>
+          </div>
+        ) : popularItems.length > 0 ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {popularItems.map((item, index) => (
+              <div
+                key={item.id}
+                className="animate-slide-up"
+                style={{ animationDelay: `${index * 0.1}s` }}
+              >
+                <FoodCard item={item} />
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-8">
+            <p className="text-muted-foreground">No popular dishes available</p>
+          </div>
+        )}
 
         {/* CTA Banner */}
         <div className="mt-16 relative rounded-3xl overflow-hidden bg-gradient-to-r from-primary to-accent p-8 md:p-12">

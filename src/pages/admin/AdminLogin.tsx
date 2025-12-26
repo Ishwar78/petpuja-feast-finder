@@ -1,16 +1,35 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { useAdminAuth } from '@/context/AdminAuthContext';
 import { Button } from '@/components/ui/button';
-import { Eye, EyeOff, Lock, Mail } from 'lucide-react';
+import { Eye, EyeOff, Lock, Mail, AlertCircle } from 'lucide-react';
+import { toast } from 'sonner';
 
 const AdminLogin = () => {
   const navigate = useNavigate();
+  const { login, isLoading, error } = useAdminAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({ email: '', password: '' });
+  const [localError, setLocalError] = useState<string | null>(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    navigate('/admin/dashboard');
+    setLocalError(null);
+
+    if (!formData.email || !formData.password) {
+      setLocalError('Please enter both email and password');
+      return;
+    }
+
+    try {
+      await login(formData.email, formData.password);
+      toast.success('Login successful!');
+      navigate('/admin/dashboard');
+    } catch (err) {
+      const errorMsg = err instanceof Error ? err.message : 'Login failed';
+      setLocalError(errorMsg);
+      toast.error(errorMsg);
+    }
   };
 
   return (
@@ -30,7 +49,14 @@ const AdminLogin = () => {
 
         <div className="bg-card rounded-2xl p-8 shadow-warm-lg">
           <h1 className="text-2xl font-bold text-foreground mb-6">Welcome Back</h1>
-          
+
+          {(localError || error) && (
+            <div className="mb-5 p-4 bg-red-500/10 border border-red-500/20 rounded-lg flex items-gap-3">
+              <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
+              <p className="text-sm text-red-500">{localError || error}</p>
+            </div>
+          )}
+
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
               <label className="block text-sm font-medium text-foreground mb-2">Email</label>
@@ -40,8 +66,9 @@ const AdminLogin = () => {
                   type="email"
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  className="w-full h-12 pl-12 pr-4 rounded-xl bg-secondary border border-border focus:outline-none focus:ring-2 focus:ring-primary text-foreground"
-                  placeholder="admin@petpuja.com"
+                  disabled={isLoading}
+                  className="w-full h-12 pl-12 pr-4 rounded-xl bg-secondary border border-border focus:outline-none focus:ring-2 focus:ring-primary text-foreground disabled:opacity-50"
+                  placeholder="petpuja12@gmail.com"
                 />
               </div>
             </div>
@@ -54,29 +81,37 @@ const AdminLogin = () => {
                   type={showPassword ? 'text' : 'password'}
                   value={formData.password}
                   onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                  className="w-full h-12 pl-12 pr-12 rounded-xl bg-secondary border border-border focus:outline-none focus:ring-2 focus:ring-primary text-foreground"
+                  disabled={isLoading}
+                  className="w-full h-12 pl-12 pr-12 rounded-xl bg-secondary border border-border focus:outline-none focus:ring-2 focus:ring-primary text-foreground disabled:opacity-50"
                   placeholder="••••••••"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  disabled={isLoading}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground disabled:opacity-50"
                 >
                   {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                 </button>
               </div>
             </div>
 
-            <div className="flex justify-end">
-              <button type="button" className="text-sm text-primary hover:underline">
-                Forgot Password?
-              </button>
-            </div>
-
-            <Button type="submit" variant="warm" size="xl" className="w-full">
-              Login to Dashboard
+            <Button
+              type="submit"
+              variant="warm"
+              size="xl"
+              className="w-full"
+              disabled={isLoading}
+            >
+              {isLoading ? 'Logging in...' : 'Login to Dashboard'}
             </Button>
           </form>
+
+          <p className="text-center text-sm text-muted-foreground mt-4">
+            Demo Credentials:<br/>
+            Email: petpuja12@gmail.com<br/>
+            Password: petpuja1234567
+          </p>
         </div>
 
         <p className="text-center text-background/50 text-sm mt-6">
