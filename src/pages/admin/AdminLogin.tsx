@@ -1,16 +1,35 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { useAdminAuth } from '@/context/AdminAuthContext';
 import { Button } from '@/components/ui/button';
-import { Eye, EyeOff, Lock, Mail } from 'lucide-react';
+import { Eye, EyeOff, Lock, Mail, AlertCircle } from 'lucide-react';
+import { toast } from 'sonner';
 
 const AdminLogin = () => {
   const navigate = useNavigate();
+  const { login, isLoading, error } = useAdminAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({ email: '', password: '' });
+  const [localError, setLocalError] = useState<string | null>(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    navigate('/admin/dashboard');
+    setLocalError(null);
+
+    if (!formData.email || !formData.password) {
+      setLocalError('Please enter both email and password');
+      return;
+    }
+
+    try {
+      await login(formData.email, formData.password);
+      toast.success('Login successful!');
+      navigate('/admin/dashboard');
+    } catch (err) {
+      const errorMsg = err instanceof Error ? err.message : 'Login failed';
+      setLocalError(errorMsg);
+      toast.error(errorMsg);
+    }
   };
 
   return (
