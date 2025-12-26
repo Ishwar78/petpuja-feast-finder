@@ -99,15 +99,31 @@ const menuItems = [
 async function seed() {
   try {
     await connectDB();
-    
-    // Clear existing products
+
+    // Clear existing data
     await Product.deleteMany({});
-    console.log('Cleared existing products');
+    await User.deleteMany({ role: 'admin' });
+    console.log('Cleared existing products and admin users');
+
+    // Create admin user
+    const existingAdmin = await User.findOne({ email: adminUser.email });
+    if (!existingAdmin) {
+      const admin = new User(adminUser);
+      await admin.save();
+      console.log(`✅ Admin user created: ${adminUser.email}`);
+    } else {
+      console.log(`✓ Admin user already exists: ${adminUser.email}`);
+    }
 
     // Insert menu items
     const insertedProducts = await Product.insertMany(menuItems);
-    console.log(`Successfully inserted ${insertedProducts.length} products`);
-    
+    console.log(`✅ Successfully inserted ${insertedProducts.length} products`);
+
+    console.log('\n=== Seed Complete ===');
+    console.log(`Admin Email: ${adminUser.email}`);
+    console.log(`Admin Password: ${adminUser.password}`);
+    console.log('===================\n');
+
     process.exit(0);
   } catch (error) {
     console.error('Error seeding database:', error);
