@@ -93,16 +93,41 @@ export const AdminLayout = ({ children }: { children: ReactNode }) => {
 
       {/* Main Content */}
       <div className="flex-1 lg:ml-64">
-        <header className="sticky top-0 z-30 bg-card border-b border-border h-16 flex items-center px-4 lg:px-8">
-          <button
-            onClick={() => setSidebarOpen(true)}
-            className="lg:hidden p-2 rounded-lg hover:bg-secondary"
-          >
-            <Menu className="w-6 h-6" />
-          </button>
-          <h1 className="text-xl font-semibold text-foreground ml-4 lg:ml-0">
-            {navItems.find(item => item.path === location.pathname)?.name || 'Admin'}
-          </h1>
+        <header className="sticky top-0 z-30 bg-card border-b border-border h-16 flex items-center justify-between px-4 lg:px-8">
+          <div className="flex items-center gap-4">
+            <button
+              onClick={() => setSidebarOpen(true)}
+              className="lg:hidden p-2 rounded-lg hover:bg-secondary"
+            >
+              <Menu className="w-6 h-6" />
+            </button>
+            <h1 className="text-xl font-semibold text-foreground">
+              {navItems.find(item => item.path === location.pathname)?.name || 'Admin'}
+            </h1>
+          </div>
+          <div className="relative">
+            <button
+              onClick={() => setDropdownOpen(!dropdownOpen)}
+              className="flex items-center gap-2 px-4 py-2 rounded-lg hover:bg-secondary transition-colors"
+            >
+              <div className="text-right">
+                <p className="text-sm font-medium text-foreground">{user?.name}</p>
+                <p className="text-xs text-muted-foreground">{user?.email}</p>
+              </div>
+              <ChevronDown className={cn("w-4 h-4 transition-transform", dropdownOpen && "rotate-180")} />
+            </button>
+            {dropdownOpen && (
+              <div className="absolute right-0 mt-2 w-48 bg-card rounded-lg shadow-lg border border-border overflow-hidden">
+                <button
+                  onClick={handleLogout}
+                  className="w-full flex items-center gap-2 px-4 py-2 text-sm text-foreground hover:bg-secondary transition-colors"
+                >
+                  <LogOut className="w-4 h-4" />
+                  Logout
+                </button>
+              </div>
+            )}
+          </div>
         </header>
         <main className="p-4 lg:p-8">{children}</main>
       </div>
