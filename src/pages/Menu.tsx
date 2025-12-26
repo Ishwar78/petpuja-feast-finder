@@ -36,9 +36,10 @@ const Menu = () => {
       setMenuItems(response.data);
       setError(null);
     } catch (err) {
-      console.error('Failed to fetch products:', err);
-      setError('Failed to load menu items. Using fallback data.');
-      setIsLoading(false);
+      console.warn('Failed to fetch products from API, using fallback data:', err);
+      // Fallback to static data when backend is unavailable
+      setMenuItems(fallbackMenuItems);
+      setError(null);
     } finally {
       setIsLoading(false);
     }
