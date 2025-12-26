@@ -7,6 +7,8 @@ import { CartProvider } from "@/context/CartContext";
 import { FavoritesProvider } from "@/context/FavoritesContext";
 import { NotificationProvider } from "@/context/NotificationContext";
 import { LoyaltyProvider } from "@/context/LoyaltyContext";
+import { AdminAuthProvider } from "@/context/AdminAuthContext";
+import { ProtectedAdminRoute } from "@/components/ProtectedAdminRoute";
 import Index from "./pages/Index";
 import Menu from "./pages/Menu";
 import FoodDetails from "./pages/FoodDetails";
