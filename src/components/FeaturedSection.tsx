@@ -1,11 +1,32 @@
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { FoodCard } from '@/components/FoodCard';
-import { menuItems } from '@/data/menuData';
+import { productsAPI } from '@/lib/api';
+import type { MenuItem } from '@/data/menuData';
 
 export const FeaturedSection = () => {
-  const popularItems = menuItems.filter(item => item.popular).slice(0, 6);
+  const [popularItems, setPopularItems] = useState<MenuItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    fetchPopularItems();
+  }, []);
+
+  const fetchPopularItems = async () => {
+    try {
+      setIsLoading(true);
+      const response = await productsAPI.getAll();
+      const popular = response.data.filter((item: MenuItem) => item.popular).slice(0, 6);
+      setPopularItems(popular);
+    } catch (err) {
+      console.error('Failed to fetch popular items:', err);
+      setPopularItems([]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <section className="py-16 md:py-24 bg-background">
