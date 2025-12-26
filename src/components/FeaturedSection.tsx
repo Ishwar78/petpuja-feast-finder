@@ -22,9 +22,10 @@ export const FeaturedSection = () => {
       const popular = response.data.filter((item: MenuItem) => item.popular).slice(0, 6);
       setPopularItems(popular);
     } catch (err) {
-      console.error('Failed to fetch popular items:', err);
-      // Fallback to empty state - backend not available
-      setPopularItems([]);
+      console.warn('Failed to fetch popular items from API, using fallback data:', err);
+      // Fallback to static data when backend is unavailable
+      const popular = fallbackMenuItems.filter(item => item.popular).slice(0, 6);
+      setPopularItems(popular);
     } finally {
       setIsLoading(false);
     }
