@@ -16,7 +16,16 @@ const navItems = [
 
 export const AdminLayout = ({ children }: { children: ReactNode }) => {
   const location = useLocation();
+  const navigate = useNavigate();
+  const { user, logout } = useAdminAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+
+  const handleLogout = () => {
+    logout();
+    toast.success('Logged out successfully');
+    navigate('/admin/login');
+  };
 
   return (
     <div className="min-h-screen bg-background flex">
