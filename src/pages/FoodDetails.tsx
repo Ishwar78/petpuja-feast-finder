@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { FoodCard } from '@/components/FoodCard';
@@ -7,18 +7,49 @@ import { Button } from '@/components/ui/button';
 import { menuItems } from '@/data/menuData';
 import { useCart } from '@/context/CartContext';
 import { ReviewModal, ReviewsList, useReviews } from '@/components/ReviewSystem';
-import { Star, Plus, Minus, ArrowLeft, Flame, Clock, Leaf, MessageSquarePlus } from 'lucide-react';
+import { Star, Plus, Minus, ArrowLeft, Flame, Clock, Leaf, MessageSquarePlus, ShoppingBag } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { toast } from 'sonner';
+
+type SizeOption = { id: string; label: string; priceMultiplier: number };
+
+const getSizeOptions = (category: string): SizeOption[] => {
+  if (category === 'drinks') {
+    return [
+      { id: 'small', label: 'Small (250ml)', priceMultiplier: 0.8 },
+      { id: 'medium', label: 'Medium (500ml)', priceMultiplier: 1 },
+      { id: 'large', label: 'Large (750ml)', priceMultiplier: 1.3 },
+    ];
+  }
+  if (category === 'combos') {
+    return [
+      { id: 'regular', label: 'Regular', priceMultiplier: 1 },
+      { id: 'family', label: 'Family Pack', priceMultiplier: 1.8 },
+    ];
+  }
+  return [
+    { id: 'small', label: 'Small', priceMultiplier: 0.75 },
+    { id: 'medium', label: 'Medium', priceMultiplier: 1 },
+    { id: 'large', label: 'Large', priceMultiplier: 1.3 },
+  ];
+};
 
 const FoodDetails = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
   const { addItem, updateQuantity, getItemQuantity } = useCart();
   const { addReview, getItemReviews, getItemRating } = useReviews();
   const [showReviewModal, setShowReviewModal] = useState(false);
-  
+  const [selectedSize, setSelectedSize] = useState('medium');
+  const [orderQuantity, setOrderQuantity] = useState(1);
+
   const item = menuItems.find(i => i.id === id);
   const quantity = item ? getItemQuantity(item.id) : 0;
-  
+
+  const sizeOptions = item ? getSizeOptions(item.category) : [];
+  const currentSize = sizeOptions.find(s => s.id === selectedSize) || sizeOptions.find(s => s.id === 'medium') || sizeOptions[0];
+  const adjustedPrice = item ? Math.round(item.price * (currentSize?.priceMultiplier || 1)) : 0;
+
   const relatedItems = menuItems
     .filter(i => i.category === item?.category && i.id !== item?.id)
     .slice(0, 4);
@@ -26,9 +57,26 @@ const FoodDetails = () => {
   const itemReviews = item ? getItemReviews(item.id) : [];
   const itemRating = item ? getItemRating(item.id) : null;
 
-  // Use customer reviews if available, otherwise use default
   const displayRating = itemRating?.average || item?.rating || 0;
   const displayReviewCount = itemRating?.count || item?.reviews || 0;
+
+  const handleOrderNow = () => {
+    if (!item) return;
+    // Add items to cart with selected quantity
+    for (let i = 0; i < orderQuantity; i++) {
+      addItem(item);
+    }
+    toast.success(`${orderQuantity}x ${item.name} (${currentSize?.label}) added!`);
+    navigate('/checkout');
+  };
+
+  const handleAddToCart = () => {
+    if (!item) return;
+    for (let i = 0; i < orderQuantity; i++) {
+      addItem(item);
+    }
+    toast.success(`${orderQuantity}x ${item.name} (${currentSize?.label}) added to cart!`);
+  };
 
   if (!item) {
     return (
@@ -67,7 +115,6 @@ const FoodDetails = () => {
                 alt={item.name}
                 className="w-full h-full object-cover"
               />
-              {/* Veg/Non-Veg Badge */}
               <div className={cn(
                 "absolute top-4 left-4 px-3 py-1.5 rounded-full flex items-center gap-2",
                 item.isVeg ? "bg-green-fresh" : "bg-accent"
@@ -80,7 +127,7 @@ const FoodDetails = () => {
             </div>
 
             {/* Info */}
-            <div className="space-y-6">
+            <div className="space-y-5">
               <div>
                 <h1 className="text-3xl md:text-4xl font-bold text-foreground">
                   {item.name}
@@ -92,7 +139,7 @@ const FoodDetails = () => {
 
               {/* Rating & Info */}
               <div className="flex flex-wrap items-center gap-4">
-                <button 
+                <button
                   onClick={() => setShowReviewModal(true)}
                   className="flex items-center gap-1 bg-gold/10 px-3 py-1.5 rounded-full hover:bg-gold/20 transition-colors"
                 >
@@ -102,7 +149,7 @@ const FoodDetails = () => {
                     ({displayReviewCount} {displayReviewCount === 1 ? 'review' : 'reviews'})
                   </span>
                 </button>
-                
+
                 {item.spicy && (
                   <div className="flex items-center gap-1 bg-accent/10 px-3 py-1.5 rounded-full">
                     <Flame className="w-4 h-4 text-accent" />
@@ -116,56 +163,86 @@ const FoodDetails = () => {
                 </div>
               </div>
 
+              {/* Size Selection */}
+              <div className="pt-2">
+                <p className="text-sm font-semibold text-foreground mb-3">Choose Size</p>
+                <div className="flex flex-wrap gap-3">
+                  {sizeOptions.map((size) => (
+                    <button
+                      key={size.id}
+                      onClick={() => setSelectedSize(size.id)}
+                      className={cn(
+                        "px-5 py-2.5 rounded-xl text-sm font-medium border-2 transition-all duration-200",
+                        selectedSize === size.id
+                          ? "border-primary bg-primary/10 text-primary shadow-warm-sm"
+                          : "border-border bg-secondary text-foreground hover:border-primary/50"
+                      )}
+                    >
+                      {size.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
               {/* Price */}
-              <div className="pt-4 border-t border-border">
-                <p className="text-4xl font-bold text-primary">₹{item.price}</p>
+              <div className="pt-2 border-t border-border">
+                <p className="text-4xl font-bold text-primary">₹{adjustedPrice}</p>
                 <p className="text-muted-foreground text-sm mt-1">Inclusive of all taxes</p>
               </div>
 
-              {/* Quantity & Add to Cart */}
-              <div className="flex flex-col sm:flex-row gap-4 pt-4">
-                {quantity === 0 ? (
+              {/* Quantity Selector */}
+              <div>
+                <p className="text-sm font-semibold text-foreground mb-3">Quantity</p>
+                <div className="inline-flex items-center gap-3 bg-secondary rounded-xl p-1.5">
                   <Button
-                    variant="cart"
-                    size="xl"
-                    className="flex-1"
-                    onClick={() => addItem(item)}
+                    variant="ghost"
+                    size="icon"
+                    className="h-10 w-10 rounded-lg"
+                    onClick={() => setOrderQuantity(Math.max(1, orderQuantity - 1))}
                   >
-                    <Plus className="w-5 h-5" />
-                    Add to Cart
+                    <Minus className="w-4 h-4" />
                   </Button>
-                ) : (
-                  <div className="flex items-center gap-4">
-                    <div className="flex items-center gap-4 bg-secondary rounded-xl p-2">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => updateQuantity(item.id, quantity - 1)}
-                      >
-                        <Minus className="w-5 h-5" />
-                      </Button>
-                      <span className="text-xl font-bold text-foreground min-w-[40px] text-center">
-                        {quantity}
-                      </span>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => updateQuantity(item.id, quantity + 1)}
-                      >
-                        <Plus className="w-5 h-5" />
-                      </Button>
-                    </div>
-                    <Link to="/cart" className="flex-1">
-                      <Button variant="warm" size="xl" className="w-full">
-                        View Cart
-                      </Button>
-                    </Link>
-                  </div>
-                )}
+                  <span className="text-xl font-bold text-foreground min-w-[40px] text-center">
+                    {orderQuantity}
+                  </span>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-10 w-10 rounded-lg"
+                    onClick={() => setOrderQuantity(Math.min(20, orderQuantity + 1))}
+                  >
+                    <Plus className="w-4 h-4" />
+                  </Button>
+                </div>
+                <p className="text-muted-foreground text-sm mt-2">
+                  Total: <span className="font-semibold text-foreground">₹{adjustedPrice * orderQuantity}</span>
+                </p>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex flex-col sm:flex-row gap-3 pt-2">
+                <Button
+                  variant="cart"
+                  size="xl"
+                  className="flex-1"
+                  onClick={handleAddToCart}
+                >
+                  <Plus className="w-5 h-5" />
+                  Add to Cart
+                </Button>
+                <Button
+                  variant="warm"
+                  size="xl"
+                  className="flex-1"
+                  onClick={handleOrderNow}
+                >
+                  <ShoppingBag className="w-5 h-5" />
+                  Order Now
+                </Button>
               </div>
 
               {/* Info Cards */}
-              <div className="grid grid-cols-2 gap-4 pt-4">
+              <div className="grid grid-cols-2 gap-4 pt-2">
                 <div className="bg-secondary rounded-xl p-4">
                   <p className="text-sm text-muted-foreground">Category</p>
                   <p className="font-semibold text-foreground capitalize">{item.category.replace('-', ' ')}</p>
