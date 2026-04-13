@@ -19,8 +19,8 @@ interface AdminAuthContextType {
 const AdminAuthContext = createContext<AdminAuthContextType | undefined>(undefined);
 
 // Demo admin credentials
-const ADMIN_EMAIL = 'petpuja12@gmail.com';
-const ADMIN_PASSWORD = 'petpuja1234567';
+const ADMIN_EMAIL = 'admin@petpuja.com';
+const ADMIN_PASSWORD = 'admin123';
 
 const ADMIN_USER: AdminUser = {
   id: 'admin-1',
