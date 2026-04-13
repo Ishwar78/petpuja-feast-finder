@@ -109,8 +109,8 @@ const AdminLogin = () => {
 
           <p className="text-center text-sm text-muted-foreground mt-4">
             Demo Credentials:<br/>
-            Email: petpuja12@gmail.com<br/>
-            Password: petpuja1234567
+            Email: admin@petpuja.com<br/>
+            Password: admin123
           </p>
         </div>
 
